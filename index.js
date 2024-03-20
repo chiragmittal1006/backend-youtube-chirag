@@ -23,7 +23,6 @@ connectDB()
     console.log("mongodb connection failed !!", err);
   });
 
-
 // import  express  from "express"
 // const app = express()
 
