@@ -33,7 +33,9 @@ const getAllVideos = asyncHandler(async (req, res) => {
 
   const getAllVideo = await Video.aggregate([
     {
-        isPublished: true
+        $match:{
+          isPublished: true
+        }
     },
     {
       $skip: (pageNum - 1) * limitNum,
@@ -164,7 +166,7 @@ const getVideoById = asyncHandler(async (req, res) => {
                     $project:{
                         fullname:1,
                         username:1,
-                        avatar:1
+                        avatar:1,
                     }
                 }
             ]
@@ -218,6 +220,47 @@ const getVideoById = asyncHandler(async (req, res) => {
             ]
         }
     },
+    {
+      $lookup:{
+        from:"likes",
+        localField:"_id",
+        foreignField:"video",
+        as:"liked",
+        pipeline:[
+          {
+            $lookup:{
+              from:"users",
+              localField:"likedBy",
+              foreignField:"_id",
+              as:"likedBy",
+              pipeline:[
+                {
+                  $project:{
+                    fullname:1,
+                    avatar:1,
+                    username:1
+                  }
+                },
+                {
+                  $addFields:{
+                    likedBy:{
+                      $arrayElemAt: ["$likedBy",0]
+                    }
+                  }
+                }
+              ]
+            }
+          },
+        ]
+      }
+    },
+    {
+      $addFields:{
+        likeCount: {
+          $size: "$liked"
+        }
+      }
+    }
     
   ])
 
